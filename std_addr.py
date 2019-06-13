@@ -56,11 +56,11 @@ def reverseLng(name,lng, lat,ak):   #经纬度反向解析   经度在前 纬度
     print(res)
     if str(res[:29]) == 'renderReverse&&renderReverse(':
         temp = json.loads(res[29:-1])
-        district = temp['result']['addressComponent'].get('district','')
-        formatted_address = temp['result'].get('formatted_address','')
-        street = temp['result']['addressComponent'].get('street','')  #获取小区所在街道 用于建立标准路库
-        city = temp['result']['addressComponent'].get('city','')
-        road_file.write(name+"^"+city + "^" + district + "^" + street+"^"+formatted_address+"^"+str(lat)+"^"+str(lng)+"\n")  #写入文件
+        district = temp['result']['addressComponent'].get('district',' ')
+        formatted_address = temp['result'].get('formatted_address',' ')
+        street = temp['result']['addressComponent'].get('street',' ')  #获取小区所在街道 用于建立标准路库
+        city = temp['result']['addressComponent'].get('city',' ')
+        road_file.write(name+"^"+city + "^" + district + "^" + street+"^"+formatted_address+"^"+lat+"^"+lng+"\n")  #写入文件
         print(street+"已完成")
         road_file.flush()
     else:
@@ -82,11 +82,11 @@ def reverseLng1(name,lng, lat,apartment,ak):   #经纬度反向解析   经度�
     print(res)
     if str(res[:29]) == 'renderReverse&&renderReverse(':
         temp = json.loads(res[29:-1])
-        district = temp['result']['addressComponent'].get('district','')
-        formatted_address = temp['result'].get('formatted_address','')
-        street = temp['result']['addressComponent'].get('street','')  #获取小区所在街道 用于建立标准路库
+        district = temp['result']['addressComponent'].get('district',' ')
+        formatted_address = temp['result'].get('formatted_address',' ')
+        street = temp['result']['addressComponent'].get('street',' ')  #获取小区所在街道 用于建立标准路库
         #city = temp['result']['addressComponent'].get('city','')
-        road_file.write(apartment+"^"+name+"^"+ district + "^" + street+"^"+formatted_address+"^"+str(lat)+"^"+str(lng)+"\n")  #写入文件
+        road_file.write(apartment+"^"+name+"^"+ district + "^" + street+"^"+formatted_address+"^"+lat+"^"+lng+"\n")  #写入文件
         print(street+"已完成")
         road_file.flush()
     else:
@@ -120,7 +120,7 @@ def read_Company_Info(ak):  #读取所有商家信息
             print(lat_lnt+"已经搜索过")
             continue
         try:
-            reverseLng(table.row_values(i)[0],table.row_values(i)[3],table.row_values(i)[2],ak)
+            reverseLng(str(table.row_values(i)[0]).strip(),str(table.row_values(i)[3]).strip(),str(table.row_values(i)[2]).strip(),ak)
             save_list.write(lat_lnt+","+ name +"\n")  #写入爬取经纬度和公司主键
             save_list.flush()
         except ChangeAKException as e:  # 捕捉AK额度不够的异常
@@ -130,7 +130,7 @@ def read_Company_Info(ak):  #读取所有商家信息
             print("已经更换AK", ak)
             print("-----------------等待3s-------------------")
             time.sleep(3)
-            reverseLng(table.row_values(i)[0],table.row_values(i)[3],table.row_values(i)[2],ak)
+            reverseLng(str(table.row_values(i)[0]).strip(),str(table.row_values(i)[3]).strip(),str(table.row_values(i)[2]).strip(),ak)
             save_list.write(lat_lnt+","+ name +"\n")  #写入爬取经纬度和公司主键
             save_list.flush()
             if ak == None:  # 如果调用ak 之后为None 证明ak池的额度全部用完 错误文件记录当前运行结束时的状态
@@ -173,7 +173,7 @@ def read_Appartment_Info(ak):#读取所有小区信息
             road_file.write(line['name'].strip()+"^"+line['name'].strip()+"^"+line['district'].strip()+ "^" +line['street'].strip()+"^"+line['formatted_address'].strip()+"^"+line['lat'].strip()+"^"+line['lng'].strip()+"\n")
             road_file.flush()
             for i in line['add_list']:
-                reverseLng1(i['name'],i['lng'], i['lat'],line['name'].strip(), ak)
+                reverseLng1(i['name'].strip(),i['lng'].strip(), i['lat'].strip(),line['name'].strip(), ak)
             save_plot.write(lat_lnt+","+ name +"\n")
             save_plot.flush()
         except ChangeAKException as e:  # 捕捉AK额度不够的异常
@@ -184,7 +184,7 @@ def read_Appartment_Info(ak):#读取所有小区信息
             print("-----------------等待3s-------------------")
             time.sleep(3)
             for i in line['add_list']:
-                reverseLng1(i['name'],i['lng'], i['lat'],line['name'].strip(), ak)
+                reverseLng1(i['name'].strip(),i['lng'].strip(), i['lat'].strip(),line['name'].strip(), ak)
             save_plot.write(lat_lnt+","+ name +"\n")
             save_plot.flush()
             if ak == None:  # 如果调用ak 之后为None 证明ak池的额度全部用完 错误文件记录当前运行结束时的状态
