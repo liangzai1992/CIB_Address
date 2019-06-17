@@ -9,7 +9,7 @@ from urllib.request import urlopen, quote
 import xlrd
 import csv
 import traceback
-class ChangeAKException(Exception):
+class NoneAKException(Exception):
     def __init__(self,message):
         Exception.__init__(self)
         self.message=message
@@ -66,10 +66,19 @@ def reverseLng(name,lng, lat,ak):   #经纬度反向解析   经度在前 纬度
     else:
         temp = json.loads(res)
         if temp['status'] == 301 or temp['status'] == 302 or temp['status'] == 401 or temp['status'] == 402:
-            print("换AK异常",temp)
-            raise ChangeAKException("要换AK了")
+            print("捕获到AK额度不够的异常")
+            ak_dic[ak] = 1  # 将当前AK的状态设置为已经跑完  P.S 1为已经跑完 0 为还有剩余额度
+            ak = exchange_AK()  # 换一个AK
+            print("已经更换AK", ak)
+            if ak == None:  # 如果调用ak 之后为None 证明ak池的额度全部用完 错误文件记录当前运行结束时的状态
+                print("配额全部用完啦！")
+                raise NoneAKException("AK用完了") 
+            print("-----------------等待3s-------------------")
+            time.sleep(3)
+            reverseLng(name,lng,lat,apartment,ak)
         else:
-            raise ChangeAKException("要换AK了")
+            raise Exception
+        
             
 def reverseLng1(name,lng, lat,apartment,ak):   #经纬度反向解析   经度在前 纬度在后
     add_list = []
@@ -92,57 +101,43 @@ def reverseLng1(name,lng, lat,apartment,ak):   #经纬度反向解析   经度�
     else:
         temp = json.loads(res)
         if temp['status'] == 301 or temp['status'] == 302 or temp['status'] == 401 or temp['status'] == 402:
-            print("换AK异常",temp)
-            raise ChangeAKException("要换AK了")
+            print("捕获到AK额度不够的异常")
+            ak_dic[ak] = 1  # 将当前AK的状态设置为 已经跑完  P.S 1为已经跑完 0 为还有剩余额度
+            ak = exchange_AK()  # 换一个AK
+            print("已经更换AK", ak)
+            if ak == None:  # 如果调用ak 之后为None 证明ak池的额度全部用完 错误文件记录当前运行结束时的状态
+                print("配额全部用完啦！")
+                raise NoneAKException("AK用完了") 
+            print("-----------------等待3s-------------------")
+            time.sleep(3)
+            reverseLng1(name,lng,lat,apartment,ak)
         else:
-            raise ChangeAKException("要换AK了") 
-
+            raise Exception
+            
 def read_Company_Info(ak):  #读取所有商家信息
     data = xlrd.open_workbook("D:\\广州公司1.xlsx")  # 文件名以及路径
     list_lat_lnt=[]
     global save_list
     save_list = open("D:\\已经爬取公司经纬度.txt",'a+',encoding='utf-8-sig')
     save_list.seek(0,0)   #光标置于文件开始处
-    for line in save_list:
-        if line :
-            line = line.split(',')
-            model = []
-            model.append(line[0].replace("\n", "")+","+line[1].replace("\n", ""))
-            model.append(line[2].replace("\n", ""))
-            list_lat_lnt.append(model)
+    list_lat_lnt=[line.replace("\n", "") for line in save_list]
     table = data.sheets()[0]
     nrows = table.nrows
-    save_num=len(list_lat_lnt)
     for i in range(nrows):
-        lat_lnt=str(table.row_values(i)[3]).strip()+","+str(table.row_values(i)[2]).strip()
-        name = str(table.row_values(i)[0])  #公司名称
-        if i<save_num:
+        lat_lnt=str(table.row_values(i)[3]).strip()+","+str(table.row_values(i)[2]).strip()+","+str(table.row_values(i)[0]).strip()
+        if lat_lnt in list_lat_lnt:
             print(lat_lnt+"已经搜索过")
             continue
         try:
             reverseLng(str(table.row_values(i)[0]).strip(),str(table.row_values(i)[3]).strip(),str(table.row_values(i)[2]).strip(),ak)
-            save_list.write(lat_lnt+","+ name +"\n")  #写入爬取经纬度和公司主键
-            save_list.flush()
-        except ChangeAKException as e:  # 捕捉AK额度不够的异常
-            print("捕获到AK额度不够的异常")
-            ak_dic[ak] = 1  # 将当前AK的状态设置为 已经跑完  P.S 1为已经跑完 0 为还有剩余额度
-            ak = exchange_AK()  # 换一个AK
-            print("已经更换AK", ak)
-            print("-----------------等待3s-------------------")
-            time.sleep(3)
-            reverseLng(str(table.row_values(i)[0]).strip(),str(table.row_values(i)[3]).strip(),str(table.row_values(i)[2]).strip(),ak)
-            save_list.write(lat_lnt+","+ name +"\n")  #写入爬取经纬度和公司主键
-            save_list.flush()
-            if ak == None:  # 如果调用ak 之后为None 证明ak池的额度全部用完 错误文件记录当前运行结束时的状态
-                print("配额全部用完啦！")
-                break
-                return None
-            else:
-                continue
+        except NoneAKException as e:  # 捕捉AK额度不够的异常
+            break
         except Exception as e:
             error_list.write("其他异常:爬取区域为"+lat_lnt+"\n")
             error_list.write(traceback.format_exc()+"\n")
-            error_list.flush()  
+            error_list.flush()
+        save_list.write(lat_lnt +"\n")  #写入爬取经纬度和公司主键
+        save_list.flush()
     save_list.close()
     
 def read_Appartment_Info(ak):#读取所有小区信息
@@ -151,21 +146,11 @@ def read_Appartment_Info(ak):#读取所有小区信息
     global save_plot
     save_plot = open("D:\\已经爬取小区经纬度.txt",'a+',encoding='utf-8-sig')
     save_plot.seek(0,0)
-    for line in save_plot:
-        if line :
-            line = line.split(',')
-            model = []
-            model.append(line[0].replace("\n", "")+","+line[1].replace("\n", ""))
-            model.append(line[2].replace("\n", ""))
-            list_lat_lnt.append(model)
-    save_num=len(list_lat_lnt)
+    list_lat_lnt=[line.replace("\n", "") for line in save_plot]
     data = json.load(file)
-    key=0
     for line in data['result']:
-        lat_lnt = line['lng'].strip()+","+line['lat'].strip()
-        name = line['name']
-        key=key+1
-        if key <=save_num:
+        lat_lnt = line['lng'].strip()+","+line['lat'].strip()+","+line['name'].strip()
+        if lat_lnt in list_lat_lnt:
             print(lat_lnt, "已经搜索过")
             continue
         try:
@@ -174,29 +159,14 @@ def read_Appartment_Info(ak):#读取所有小区信息
             road_file.flush()
             for i in line['add_list']:
                 reverseLng1(i['name'].strip(),i['lng'].strip(), i['lat'].strip(),line['name'].strip(), ak)
-            save_plot.write(lat_lnt+","+ name +"\n")
-            save_plot.flush()
-        except ChangeAKException as e:  # 捕捉AK额度不够的异常
-            print("捕获到AK额度不够的异常")
-            ak_dic[ak] = 1  # 将当前AK的状态设置为 已经跑完  P.S 1为已经跑完 0 为还有剩余额度
-            ak = exchange_AK()  # 换一个AK
-            print("已经更换AK", ak)
-            print("-----------------等待3s-------------------")
-            time.sleep(3)
-            for i in line['add_list']:
-                reverseLng1(i['name'].strip(),i['lng'].strip(), i['lat'].strip(),line['name'].strip(), ak)
-            save_plot.write(lat_lnt+","+ name +"\n")
-            save_plot.flush()
-            if ak == None:  # 如果调用ak 之后为None 证明ak池的额度全部用完 错误文件记录当前运行结束时的状态
-                print("配额全部用完啦！")
-                break
-                return None
-            else:
-                continue
+        except NoneAKException as e:  # 捕捉AK额度不够的异常
+            break
         except Exception as e:
             error_list.write("其他异常:爬取区域为"+lat_lnt+"\n")
             error_list.write(traceback.format_exc()+"\n")
-            error_list.flush()  
+            error_list.flush()
+        save_plot.write(lat_lnt+"\n")
+        save_plot.flush()
     save_plot.close()
     
 if __name__ == "__main__":
