@@ -22,7 +22,6 @@ def initial_AK_pond():   #初始化ak 池 0 为有额度 1为额度已经用完 
         "mKOV9991B7N98C46kUeNRUXScM067Xys": 0,
         "hvZ5O0of19Alfl7HShUWyOVlFiD8WYWG": 0,
         "5tlPS97zCcgTjbk6gy6AnLVG4p2jtg7u": 0,
-        "WsBD1YKmVGBG9TGcpoewf3f05f8wqbQH": 0,
         "GEC7Zek74HysO1AKCx1iG6bOXCzTWE6z": 0,
         "9HnBVwKEC01DMgxmINhOSGMt5q1M8kyr": 0,
         "SB3KV3mGWLQ3ncHEk7QfiRNCYHFMYtav": 0,
@@ -174,7 +173,7 @@ if __name__ == "__main__":
     global error_list
     road_file = open("D:\\All_roads.txt",'a+',encoding='utf8')
     error_list = open("D:\\error_list.txt",'a+',encoding='utf8')
-    ak = 'WsBD1YKmVGBG9TGcpoewf3f05f8wqbQH'
+    ak = 'UKg9gDjYcHMB5hSFMi1HxuQz18f041t1'
     initial_AK_pond()
     read_Appartment_Info(ak)  #先将安居客路库信息 跑完
     #read_Company_Info(ak)   #再跑所有商家信息
