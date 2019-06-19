@@ -131,15 +131,14 @@ def read_Company_Info(ak):  #读取所有商家信息
             continue
         try:
             ak=reverseLng(str(table.row_values(i)[0]).strip(),str(table.row_values(i)[3]).strip(),str(table.row_values(i)[2]).strip(),ak)
-            #print(ak+'--------------------------------------------')
+            save_list.write(lat_lnt +"\n")  #写入爬取经纬度和公司主键
+            save_list.flush()
         except NoneAKException as e:  # 捕捉AK额度不够的异常
             break
         except Exception as e:
             error_list.write("其他异常:爬取区域为"+lat_lnt+"\n")
             error_list.write(traceback.format_exc()+"\n")
             error_list.flush()
-        save_list.write(lat_lnt +"\n")  #写入爬取经纬度和公司主键
-        save_list.flush()
     save_list.close()
     
 def read_Appartment_Info(ak):#读取所有小区信息
@@ -161,14 +160,14 @@ def read_Appartment_Info(ak):#读取所有小区信息
             road_file.flush()
             for i in line['add_list']:
                 ak=reverseLng1(i['name'].strip(),i['lng'].strip(), i['lat'].strip(),line['name'].strip(), ak)
+            save_plot.write(lat_lnt+"\n")
+            save_plot.flush()
         except NoneAKException as e:  # 捕捉AK额度不够的异常
             break
         except Exception as e:
             error_list.write("其他异常:爬取区域为"+lat_lnt+"\n")
             error_list.write(traceback.format_exc()+"\n")
             error_list.flush()
-        save_plot.write(lat_lnt+"\n")
-        save_plot.flush()
     save_plot.close()
     
 if __name__ == "__main__":
