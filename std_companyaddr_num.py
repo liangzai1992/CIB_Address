@@ -6,7 +6,7 @@ if __name__ == "__main__":
     data = xlrd.open_workbook("D:\\上海_公司_标准路.xlsx")
     table = data.sheets()[0]
     nrows = table.nrows
-    road_pattern=re.compile(".*?区(.*?(路|大道|街))")
+    road_pattern=re.compile(".*?[区县](.*?(路|大道|街))")
     road_pattern_1=re.compile(".*?\((.*?(路|大道|街))")
     num_leftpattern=re.compile(".*?(路|大道|街)(.+)")
     num_pattern=re.compile(".*?(\d+)")
