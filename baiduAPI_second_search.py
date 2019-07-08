@@ -80,7 +80,7 @@ def BaiduAPI_singleSearch(key, region, ak):
         ak_dic[ak] = 1  # 将当前AK的状态设置为已经跑完  P.S 1为已经跑完 0 为还有剩余额度
         print("捕获到AK额度不够的异常")
         ak = exchange_AK()  # 换一个AK
-        print("已经更换AK", ak1)
+        print("已经更换AK", ak)
         if ak == None:  # 如果调用ak 之后为None 证明ak池的额度全部用完 错误文件记录当前运行结束时的状态
             print("配额全部用完啦！")
             raise NoneAKException("AK用完了")
