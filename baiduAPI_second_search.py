@@ -51,7 +51,6 @@ def exchange_AK():
     return None
 
 def BaiduAPI_singleSearch(key, region, ak):
-    ak1 = ak
     key_encode = quote(key)
     district = quote(region)
     url = "http://api.map.baidu.com/place/v2/search"
@@ -78,20 +77,19 @@ def BaiduAPI_singleSearch(key, region, ak):
             new_txt.write(data + "\n")  # 写入txt
             new_txt.flush()
     elif temp['status'] == 301 or temp['status'] == 302 or temp['status'] == 401 or temp['status'] == 402:
-        ak_dic[ak1] = 1  # 将当前AK的状态设置为已经跑完  P.S 1为已经跑完 0 为还有剩余额度
+        ak_dic[ak] = 1  # 将当前AK的状态设置为已经跑完  P.S 1为已经跑完 0 为还有剩余额度
         print("捕获到AK额度不够的异常")
-        ak1 = exchange_AK()  # 换一个AK
+        ak = exchange_AK()  # 换一个AK
         print("已经更换AK", ak1)
-        if ak1 == None:  # 如果调用ak 之后为None 证明ak池的额度全部用完 错误文件记录当前运行结束时的状态
+        if ak == None:  # 如果调用ak 之后为None 证明ak池的额度全部用完 错误文件记录当前运行结束时的状态
             print("配额全部用完啦！")
             raise NoneAKException("AK用完了")
         print("-----------------等待3s-------------------")
         time.sleep(3)
-        BaiduAPI_singleSearch(key, region, ak1)
-        flag = 0
+        BaiduAPI_singleSearch(key, region, ak)
     else:
         pass
-    return ak1
+    return ak
 
 
 def run(filepath):
@@ -157,7 +155,7 @@ if __name__ == '__main__':
     initial_AK_pond()
     new_txt = open("/Users/Shar/Desktop/Sheets/上海公司地址补充.txt",'a+',encoding='utf8')
     global searched_list
-    searched_list = open("/Users/Shar/Desktop/Sheets/已爬列表.txt",'a+',encoding='utf8')
+    searched_list = open("/Users/Shar/Desktop/Sheets/已爬列表.txt",'a+',encoding='utf-8-sig')
     global error_list
     error_list = open("/Users/Shar/Desktop/Sheets/报错列表.txt",'a+',encoding='utf8')
     filepath = "/Users/Shar/Desktop/Sheets/上海公司标准地址整理.xlsx"
