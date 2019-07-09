@@ -62,6 +62,6 @@ if __name__ == "__main__":
             if match_num:
                 num_str=match_num.group(1)
         road_file.write(str(table.row_values(i)[0]).strip()+'^'+str(table.row_values(i)[1]).strip()+'^'+
-                        str(table.row_values(i)[2]).strip()+'^'+str(table.row_values(i)[5]).strip()+'^'+
+                        str(table.row_values(i)[2]).strip()+'^'+str(table.row_values(i)[4]).strip()+'^'+str(table.row_values(i)[5]).strip()+'^'+
                         str(table.row_values(i)[6]).strip()+'^'+road_name+'^'+num_str+'\n')
     road_file.close()
