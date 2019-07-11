@@ -6,6 +6,7 @@ from openpyxl.utils import get_column_letter
 from urllib.request import urlopen, quote
 import xlrd
 import time
+import os
 
 class NoneAKException(Exception):
     def __init__(self,message):
@@ -75,7 +76,7 @@ def BaiduAPI_singleSearch(key, region, ak):
             data = str(name) + "^" + str(subname) + "^" + str(city) + "^" + str(area) + "^" + str(addr) + "^" + str(
                 lat) + "^" + str(lng)
             new_txt.write(data + "\n")  # 写入txt
-            new_txt.flush()
+            #new_txt.flush()
     elif temp['status'] == 301 or temp['status'] == 302 or temp['status'] == 401 or temp['status'] == 402:
         ak_dic[ak] = 1  # 将当前AK的状态设置为已经跑完  P.S 1为已经跑完 0 为还有剩余额度
         print("捕获到AK额度不够的异常")
@@ -100,10 +101,12 @@ def run(filepath):
     nonstandard_addr_count = 0
     success_count = 0
     print("Finish reading xlsx")
+    searched_list.seek(0,0)
+    searched_list1=[line.encode('utf8').decode('utf-8-sig').replace("\n","") for line in searched_list]
     for i in range(nrows):
         num = table.row_values(i)[7] #路号
         street = table.row_values(i)[6] #路名
-        if num.isspace() or street.isspace(): #如果路名或路号为空，则将名字和行政区域输入百度地图，返回相关条目作为此地址的补充
+        if str(num).isspace() or street.isspace(): #如果路名或路号为空，则将名字和行政区域输入百度地图，返回相关条目作为此地址的补充
             nonstandard_addr_count = nonstandard_addr_count + 1
             keyword = table.row_values(i)[0] #公司/小区名字
             lat = table.row_values(i)[4]
@@ -111,7 +114,8 @@ def run(filepath):
             addr = table.row_values(i)[3]
             cur = str(keyword) + "^" + str(addr) + "^" + str(lat) + "^" + str(lng)
             # 如果是已爬取的信息，跳过
-            if cur in searched_list:
+            if cur in searched_list1:
+                print(cur+'已爬取')
                 continue
             district = table.row_values(i)[2] #区名
             try:
@@ -153,17 +157,35 @@ def txt_to_xlsx(filename, outfile): # txt转xlsx
 if __name__ == '__main__':
     global new_txt
     initial_AK_pond()
-    new_txt = open("/Users/Shar/Desktop/Sheets/上海公司地址补充.txt",'a+',encoding='utf8')
+    global city_name_list
     global searched_list
-    searched_list = open("/Users/Shar/Desktop/Sheets/已爬列表.txt",'a+',encoding='utf-8-sig')
+    global searched_city
     global error_list
-    error_list = open("/Users/Shar/Desktop/Sheets/报错列表.txt",'a+',encoding='utf8')
-    filepath = "/Users/Shar/Desktop/Sheets/上海公司标准地址整理.xlsx"
-    txt = '/Users/Shar/Desktop/Sheets/上海公司地址补充.txt'
-    new_sheet = '/Users/Shar/Desktop/Sheets/上海公司地址补充.xlsx'
-    run(filepath)
-    print("Successfully saved to " + txt)
-    new_txt.close()
-    txt_to_xlsx(txt, new_sheet)
-    print("Successfully converted to " + new_sheet)
-    print("-------------------------------------ALL JOBS DONE-----------------------------------")
+    city_name_list=['安庆','鞍山']
+    searched_city=open("城市已爬列表.txt",'a+',encoding='utf8')
+    searched_city.seek(0,0)
+    searched_city_list=[line.encode('utf8').decode('utf-8-sig').replace("\n","") for line in searched_city]
+    for city_name in city_name_list:
+        if city_name in searched_city_list:
+            print(city_name+'城市已经爬取')
+            continue
+        os.mkdir("%s"%(city_name))
+        new_txt = open("%s/%s公司地址补充.txt" %(city_name,city_name),'a+',encoding='utf8')
+        searched_list = open("%s/%s已爬列表.txt"%(city_name,city_name),'a+',encoding='utf8')
+        error_list = open("%s/%s报错列表.txt"%(city_name,city_name),'a+',encoding='utf8')
+        filepath = "F:\地址项目材料\公司地址\%s.xlsx" %(city_name)
+        txt = '%s/%s公司地址补充.txt' %(city_name,city_name)
+        new_sheet = '%s/%s公司地址补充.xlsx' %(city_name,city_name)
+        run(filepath)
+        print("Successfully saved to " + txt)
+        new_txt.close()
+        txt_to_xlsx(txt, new_sheet)
+        print("Successfully converted to " + new_sheet)
+        print("-------------------------------------ALL JOBS DONE-----------------------------------")
+        searched_city.write(city_name+'\n')
+        searched_city.flush()
+        new_txt.close()
+        searched_list.close()
+        error_list.close()
+    searched_city.close()
+        
